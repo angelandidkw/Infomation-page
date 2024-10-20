@@ -40,7 +40,26 @@
             max-width: 600px;
             width: 100%;
             text-align: center;
-            transition: filter 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.3),
+                0 0 30px rgba(255, 255, 255, 0.2),
+                0 0 45px rgba(255, 255, 255, 0.1),
+                0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: filter 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .container:hover {
+            box-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.4),
+                0 0 40px rgba(255, 255, 255, 0.3),
+                0 0 60px rgba(255, 255, 255, 0.2),
+                0 8px 32px rgba(31, 38, 135, 0.37);
         }
         
         h1, h2 {
@@ -52,10 +71,12 @@
         h1 {
             font-size: clamp(2rem, 5vw, 4rem);
             animation: textFade 2s ease-in-out;
+            margin-bottom: 10px;
         }
         
         h2 {
             font-size: clamp(1.5rem, 3vw, 2.5rem);
+            margin-bottom: 5px;
         }
         
         @keyframes textFade {
@@ -72,6 +93,7 @@
         
         .links {
             font-size: clamp(1rem, 1.5vw, 1.5rem);
+            margin-top: 20px;
         }
         
         .links a {
@@ -81,6 +103,8 @@
             transition: all 0.3s ease;
             display: inline-block;
             position: relative;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
         
         .links a::after {
@@ -88,32 +112,22 @@
             position: absolute;
             width: 100%;
             height: 2px;
-            bottom: -5px;
+            bottom: -2px;
             left: 0;
             background-color: var(--primary-color);
             transform: scaleX(0);
             transition: transform 0.3s ease;
         }
         
-        .links a:hover::after {
-            transform: scaleX(1);
-        }
-        
         .links a:hover {
             color: var(--secondary-color);
-            transform: translateY(-2px);
+            transform: translateY(-5px) scale(1.1);
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
         }
         
-        .links a:hover ~ * {
-            filter: blur(4px);
-        }
-
-        .container:has(.links a:hover) > *:not(.links) {
-            filter: blur(4px);
-        }
-
-        .container:has(.links a:hover) .links a:not(:hover) {
-            filter: blur(4px);
+        .links a:hover::after {
+            transform: scaleX(1);
         }
 
         /* Custom Scrollbar */
@@ -136,18 +150,32 @@
         
         .moving-dot {
             position: fixed;
-            width: 8px;  /* Increased from 4px to 8px */
-            height: 8px; /* Increased from 4px to 8px */
+            width: 8px;
+            height: 8px;
             background: #ffffff;
             border-radius: 50%;
-            pointer-events: none;
+            pointer-events: auto;
+            cursor: pointer;
             mix-blend-mode: screen;
             box-shadow: 
-                0 0 10px 4px rgba(255, 255, 255, 0.3),  /* Increased shadow size */
-                0 0 20px 8px rgba(255, 255, 255, 0.2),  /* Increased shadow size */
-                0 0 30px 12px rgba(255, 255, 255, 0.1); /* Increased shadow size */
+                0 0 10px 4px rgba(255, 255, 255, 0.3),
+                0 0 20px 8px rgba(255, 255, 255, 0.2),
+                0 0 30px 12px rgba(255, 255, 255, 0.1);
             z-index: 9997;
             transition: transform 0.3s ease-out;
+        }
+
+        /* Add these rules back for the blurring effect */
+        .links a:hover ~ * {
+            filter: blur(4px);
+        }
+
+        .container:has(.links a:hover) > *:not(.links) {
+            filter: blur(4px);
+        }
+
+        .container:has(.links a:hover) .links a:not(:hover) {
+            filter: blur(4px);
         }
     </style>
 </head>
@@ -159,73 +187,87 @@
         <div class="phone">Contact me</div>
         <div class="links">
             <a href="mailto:example@email.com">→DISCORD</a>
-            <a href="https://www.instagram.com/example">→INSTA</a>
+            <a href="https://www.instagram.com/example">→INSTAGRAM</a>
         </div>
     </div>
 
     <script>
         const numDots = 15;
         const dots = [];
-        let mouseX = 0;
-        let mouseY = 0;
+        let isHovering = false;
 
-        function createDot() {
+        function createDot(x, y) {
             const dot = document.createElement('div');
             dot.className = 'moving-dot';
+            dot.style.left = `${x}px`;
+            dot.style.top = `${y}px`;
+            dot.vx = Math.random() * 2 - 1; // Random velocity X
+            dot.vy = Math.random() * 2 - 1; // Random velocity Y
             document.body.appendChild(dot);
+            
+            dot.addEventListener('click', (e) => {
+                spawnNewDots(e.clientX, e.clientY);
+            });
+
             return dot;
         }
 
+        function spawnNewDots(x, y) {
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 50 + 20;
+                const newX = x + Math.cos(angle) * distance;
+                const newY = y + Math.sin(angle) * distance;
+                const newDot = createDot(newX, newY);
+                dots.push(newDot);
+            }
+        }
+
         function setRandomPosition(dot) {
-            const x = Math.random() * window.innerWidth;
-            const y = Math.random() * window.innerHeight;
-            dot.style.left = `${x}px`;
-            dot.style.top = `${y}px`;
-            dot.dataset.baseX = x;
-            dot.dataset.baseY = y;
-            dot.dataset.angle = Math.random() * Math.PI * 2;
+            dot.style.left = `${Math.random() * window.innerWidth}px`;
+            dot.style.top = `${Math.random() * window.innerHeight}px`;
         }
 
         for (let i = 0; i < numDots; i++) {
-            const dot = createDot();
+            const dot = createDot(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
             dots.push(dot);
-            setRandomPosition(dot);
         }
 
         function updateDotPositions() {
-            dots.forEach((dot, index) => {
-                const baseX = parseFloat(dot.dataset.baseX);
-                const baseY = parseFloat(dot.dataset.baseY);
-                let angle = parseFloat(dot.dataset.angle);
+            dots.forEach((dot) => {
+                let x = parseFloat(dot.style.left);
+                let y = parseFloat(dot.style.top);
 
-                // Continuous movement
-                angle += 0.02;
-                const radius = 20 + index * 2;
-                const continuousX = Math.cos(angle) * radius;
-                const continuousY = Math.sin(angle) * radius;
+                // Update position
+                let speed = isHovering ? 0.2 : 1; // Slow down when hovering
+                x += dot.vx * speed;
+                y += dot.vy * speed;
 
-                // Cursor influence
-                const cursorInfluenceX = (mouseX - baseX) / (index + 5);
-                const cursorInfluenceY = (mouseY - baseY) / (index + 5);
+                // Bounce off edges
+                if (x <= 0 || x >= window.innerWidth - 8) dot.vx *= -1;
+                if (y <= 0 || y >= window.innerHeight - 8) dot.vy *= -1;
 
-                // Combine continuous movement and cursor influence
-                const totalX = continuousX + cursorInfluenceX;
-                const totalY = continuousY + cursorInfluenceY;
-                
-                dot.style.transform = `translate(${totalX}px, ${totalY}px)`;
-                dot.dataset.angle = angle;
+                // Apply new position
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
             });
 
             requestAnimationFrame(updateDotPositions);
         }
 
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
         window.addEventListener('resize', () => {
             dots.forEach(setRandomPosition);
+        });
+
+        // Add event listeners for link hover
+        const links = document.querySelectorAll('.links a');
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                isHovering = true;
+            });
+            link.addEventListener('mouseleave', () => {
+                isHovering = false;
+            });
         });
 
         updateDotPositions();
